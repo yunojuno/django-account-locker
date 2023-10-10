@@ -14,7 +14,7 @@ INSTALLED_APPS = (
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "my_app",
+    "account_locker",
 )
 
 MIDDLEWARE = [
@@ -72,3 +72,9 @@ ROOT_URLCONF = "demo.urls"
 
 if not DEBUG:
     raise Exception("This settings file can only be used with DEBUG=True")
+
+# === demo settings ===
+
+AUTHENTICATION_BACKENDS = [
+    "demo.auth_backends.CustomAuthBackend",
+]

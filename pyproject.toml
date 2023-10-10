@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "my-app"
+name = "account-locker"
 version = "0.1.0"
-description = "Project template for Django app, using Poetry."
+description = "Django app to manage account login throttling."
 license = "MIT"
 authors = ["YunoJuno <code@yunojuno.com>"]
 maintainers = ["YunoJuno <code@yunojuno.com>"]
 readme = "README.md"
-homepage = "https://github.com/yunojuno/poetry-template"
-repository = "https://github.com/yunojuno/poetry-template"
-documentation = "https://github.com/yunojuno/poetry-template"
+homepage = "https://github.com/yunojuno/django-account-locker"
+repository = "https://github.com/yunojuno/django-account-locker"
+documentation = "https://github.com/yunojuno/django-account-locker"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Web Environment",
@@ -17,6 +17,7 @@ classifiers = [
     "Framework :: Django :: 4.0",
     "Framework :: Django :: 4.1",
     "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
@@ -24,8 +25,9 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
-packages = [{ include = "my_app" }]
+packages = [{ include = "account_locker" }]
 
 [tool.poetry.dependencies]
 python = "^3.8"
