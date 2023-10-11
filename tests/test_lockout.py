@@ -51,5 +51,10 @@ def test_raise_if_locked() -> None:
 
 
 def test_raise_if_locked__custom_error() -> None:
-    with pytest.raises(ValueError):
-        lockout.raise_if_locked("username", raise_exception=ValueError)
+    class CustomError(Exception):
+        def __init__(self, message: str) -> None:
+            self.message = message
+
+    with pytest.raises(CustomError) as excinfo:
+        lockout.raise_if_locked("username", exception_type=CustomError, message="foo")
+    assert str(excinfo.value.message) == "foo"

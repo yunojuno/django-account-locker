@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -44,22 +45,18 @@ def is_account_locked(username: str) -> bool:
 
 def raise_if_locked(
     username: str,
-    message: str = AccountLocked.default_message,
-    raise_exception: type[Exception] = AccountLocked,
+    exception_type: type[Exception] = AccountLocked,
+    **exception_kwargs: Any,
 ) -> None:
     """
-    Raise AccountLocked error if account is locked.
+    Raise error if account is locked.
 
-    The default message is deliberately vague, but you can overwite it
-    with the message kwarg if you want to be more specific.
-
-    The default exception raised is AccountLocked, but you can override
-    this by passing in a new exception class with the raise_exception
-    kwarg.
+    By default this will raise AccountLocked, but you can override this
+    by passing in a new exception class and its kwargs.
 
     """
     if is_account_locked(username):
-        raise raise_exception(message)
+        raise exception_type(**exception_kwargs)
 
 
 def handle_failed_login(username: str, request: HttpRequest) -> bool:
