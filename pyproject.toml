@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "account-locker"
+name = "django-account-locker"
 version = "0.1.0"
 description = "Django app to manage account login throttling."
 license = "MIT"
