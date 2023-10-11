@@ -30,10 +30,21 @@ def account_is_locked(username: str) -> bool:
 def raise_if_locked(
     username: str,
     message: str = AccountLocked.default_message,
+    raise_exception: type[Exception] = AccountLocked,
 ) -> None:
-    """Raise AccountLocked error if account is locked."""
+    """
+    Raise AccountLocked error if account is locked.
+
+    The default message is deliberately vague, but you can overwite it
+    with the message kwarg if you want to be more specific.
+
+    The default exception raised is AccountLocked, but you can override
+    this by passing in a new exception class with the raise_exception
+    kwarg.
+
+    """
     if account_is_locked(username):
-        raise AccountLocked(message)
+        raise raise_exception(message)
 
 
 def handle_failed_login(username: str, request: HttpRequest) -> bool:

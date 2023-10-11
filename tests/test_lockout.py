@@ -48,3 +48,8 @@ def test_raise_if_locked() -> None:
     lockout.lock_account("username")
     with pytest.raises(AccountLocked):
         lockout.raise_if_locked("username")
+
+
+def test_raise_if_locked__custom_error() -> None:
+    with pytest.raises(ValueError):
+        lockout.raise_if_locked("username", raise_exception=ValueError)
