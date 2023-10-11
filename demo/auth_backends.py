@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.http import HttpRequest
 
-from account_locker.lockout import account_is_locked, handle_failed_login
+from account_locker import lockout
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -26,7 +26,7 @@ class CustomAuthBackend(ModelBackend):
         if not username:
             return None
 
-        if account_is_locked(username):
+        if lockout.is_account_locked(username):
             logger.info("Account is locked")
             messages.error(request, "Your account is locked.")
             return None
@@ -39,6 +39,6 @@ class CustomAuthBackend(ModelBackend):
         except User.DoesNotExist:
             logger.info("Invalid username %s", username)
             messages.error(request, "Invalid username / password combination.")
-        if handle_failed_login(username, request):
+        if lockout.handle_failed_login(username, request):
             messages.error(request, "Your account has been locked.")
         return None

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
+
 from django.core.cache import cache
 from django.http import HttpRequest
 
 from .exceptions import AccountLocked
 from .models import FailedLogin
 from .settings import ACCOUNT_LOCKED_TIMEOUT_SECS
+
+logger = logging.getLogger(__name__)
 
 
 def _cache_key(username: str) -> str:
@@ -14,15 +18,17 @@ def _cache_key(username: str) -> str:
 
 def lock_account(username: str) -> None:
     """Mark an account as locked for a short period."""
+    logger.debug("Locking account '%s'", username)
     cache.set(_cache_key(username), True, ACCOUNT_LOCKED_TIMEOUT_SECS)
 
 
 def unlock_account(username: str) -> None:
     """Unlock an account by removing cache entry."""
+    logger.debug("Unlocking account '%s'", username)
     cache.delete(_cache_key(username))
 
 
-def account_is_locked(username: str) -> bool:
+def is_account_locked(username: str) -> bool:
     """Return True if the account is within its lockout period."""
     return bool(cache.get(_cache_key(username), False))
 
@@ -43,7 +49,7 @@ def raise_if_locked(
     kwarg.
 
     """
-    if account_is_locked(username):
+    if is_account_locked(username):
         raise raise_exception(message)
 
 
@@ -54,6 +60,7 @@ def handle_failed_login(username: str, request: HttpRequest) -> bool:
     Returns True if account is now locked.
 
     """
+    logger.debug("Adding failed login for '%s'", username)
     FailedLogin.objects.create(username=username, request=request)
     if FailedLogin.objects.gte_max_limit(username):
         lock_account(username)
