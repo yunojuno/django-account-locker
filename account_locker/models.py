@@ -61,7 +61,7 @@ class FailedLoginManager(models.Manager):
 class FailedLogin(models.Model):
     """Store failed login attempts."""
 
-    username = models.CharField(max_length=255)
+    username = models.CharField(max_length=255, db_index=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     timestamp = models.DateTimeField(default=tz_now)
