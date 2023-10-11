@@ -4,6 +4,7 @@ import logging
 
 from django.core.cache import cache
 from django.http import HttpRequest
+from django.utils.timezone import now as tz_now
 
 from .exceptions import AccountLocked
 from .models import FailedLogin
@@ -19,7 +20,7 @@ def _cache_key(username: str) -> str:
 def lock_account(username: str, seconds: int = ACCOUNT_LOCKED_TIMEOUT_SECS) -> None:
     """Mark an account as locked for a short period."""
     logger.debug("Locking account '%s' for %s seconds", username, seconds)
-    cache.set(_cache_key(username), True, seconds)
+    cache.set(_cache_key(username), tz_now(), seconds)
 
 
 def unlock_account(username: str) -> None:
