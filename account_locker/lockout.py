@@ -18,7 +18,7 @@ def _cache_key(username: str) -> str:
 
 def lock_account(username: str, seconds: int = ACCOUNT_LOCKED_TIMEOUT_SECS) -> None:
     """Mark an account as locked for a short period."""
-    logger.debug("Locking account '%s'", username)
+    logger.debug("Locking account '%s' for %s seconds", username, seconds)
     cache.set(_cache_key(username), True, seconds)
 
 
@@ -30,7 +30,15 @@ def unlock_account(username: str) -> None:
 
 def is_account_locked(username: str) -> bool:
     """Return True if the account is within its lockout period."""
-    return bool(cache.get(_cache_key(username), False))
+    if timestamp := cache.get(_cache_key(username), None):
+        logger.debug(
+            "Account '%s' locked at %s, for %s seconds",
+            username,
+            timestamp,
+            ACCOUNT_LOCKED_TIMEOUT_SECS,
+        )
+        return True
+    return False
 
 
 def raise_if_locked(
