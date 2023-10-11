@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 from django.db import models
+from django.http import HttpRequest
 from django.utils.timezone import now as tz_now
 
 from .exceptions import AccountLocked
@@ -29,6 +31,20 @@ class FailedLoginQuerySet(models.QuerySet):
         )
 
 
+class FailedLoginManager(models.Manager):
+    def create(self, username: str, request: HttpRequest, **kwargs: Any) -> Any:
+        """Create a FailedLogin object."""
+        kwargs["user_agent"] = request.META.get("HTTP_USER_AGENT")[:255]
+        # X-Forwarded-For is used by convention when passing through
+        # load balancers etc., as the REMOTE_ADDR is rewritten in transit
+        kwargs["ip_address"] = (
+            request.META.get("HTTP_X_FORWARDED_FOR")
+            if "HTTP_X_FORWARDED_FOR" in request.META
+            else request.META.get("REMOTE_ADDR", "")
+        )[:39]
+        return super().create(username=username, **kwargs)
+
+
 class FailedLogin(models.Model):
     """Store failed login attempts."""
 
@@ -37,7 +53,7 @@ class FailedLogin(models.Model):
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     timestamp = models.DateTimeField(default=tz_now)
 
-    objects = FailedLoginQuerySet.as_manager()
+    objects = FailedLoginManager.from_queryset(FailedLoginQuerySet)()
 
     def __str__(self) -> str:
         return f"FailedLogin for {self.username}"

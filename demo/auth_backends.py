@@ -38,11 +38,7 @@ class CustomAuthBackend(ModelBackend):
             logger.info("Invalid password for user %s", username)
         except User.DoesNotExist:
             logger.info("Invalid username %s", username)
-        FailedLogin.objects.create(
-            username=username,
-            ip_address=request.META.get("REMOTE_ADDR"),
-            user_agent=request.META.get("HTTP_USER_AGENT"),
-        )
+        FailedLogin.objects.create(username, request)
         if FailedLogin.objects.gte_max_limit(username):
             logger.info("Locking account %s", username)
             lock_account(username)
