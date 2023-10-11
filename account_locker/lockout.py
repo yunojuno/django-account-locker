@@ -13,14 +13,17 @@ def _cache_key(username: str) -> str:
 
 
 def lock_account(username: str) -> None:
+    """Mark an account as locked for a short period."""
     cache.set(_cache_key(username), True, ACCOUNT_LOCKED_TIMEOUT_SECS)
 
 
 def unlock_account(username: str) -> None:
+    """Unlock an account by removing cache entry."""
     cache.delete(_cache_key(username))
 
 
 def account_is_locked(username: str) -> bool:
+    """Return True if the account is within its lockout period."""
     return bool(cache.get(_cache_key(username), False))
 
 

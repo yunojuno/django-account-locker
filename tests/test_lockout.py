@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.test import RequestFactory
 
 from account_locker import lockout
+from account_locker.exceptions import AccountLocked
 from account_locker.models import FailedLogin
 from account_locker.settings import MAX_FAILED_LOGIN_ATTEMPTS
 
@@ -38,3 +39,12 @@ def test_handle_failed_login(rf: RequestFactory) -> None:
     assert lockout.account_is_locked("username")
     cache.clear()
     assert not lockout.account_is_locked("username")
+
+
+def test_raise_if_locked() -> None:
+    # account is not locked
+    lockout.raise_if_locked("username")
+    # lock account and try again
+    lockout.lock_account("username")
+    with pytest.raises(AccountLocked):
+        lockout.raise_if_locked("username")

@@ -14,23 +14,20 @@ from .settings import (
 
 
 def _parse_ip_address(request: HttpRequest) -> str:
-    """Return the first IP address from a comma-separated list."""
-    try:
-        return (
-            request.META.get("HTTP_X_FORWARDED_FOR")
-            if "HTTP_X_FORWARDED_FOR" in request.META
-            else request.META.get("REMOTE_ADDR", "")
-        )[:39]
-    except AttributeError:
+    """Return source ip address from a request."""
+    if not request:
         return ""
+    if forwarded_for := request.META.get("HTTP_X_FORWARDED_FOR"):
+        # split for multiple ips, and take the first
+        return forwarded_for.split(",")[0]
+    return request.META.get("REMOTE_ADDR", "")
 
 
 def _parse_user_agent(request: HttpRequest) -> str:
     """Return the user agent string."""
-    try:
-        return request.META.get("HTTP_USER_AGENT")[:255]
-    except AttributeError:
+    if not request:
         return ""
+    return request.META.get("HTTP_USER_AGENT", "")
 
 
 class FailedLoginQuerySet(models.QuerySet):
@@ -41,10 +38,10 @@ class FailedLoginQuerySet(models.QuerySet):
         interval: int = FAILED_LOGIN_INTERVAL_SECS,
     ) -> bool:
         """Return True if the number of failed logins exceeds stated limits."""
-        window = tz_now() - datetime.timedelta(seconds=interval)
+        cutoff = tz_now() - datetime.timedelta(seconds=interval)
         return (
             self.order_by("-timestamp")
-            .filter(username=username, timestamp__gte=window)
+            .filter(username=username, timestamp__gte=cutoff)
             .count()
             >= limit
         )
@@ -53,8 +50,8 @@ class FailedLoginQuerySet(models.QuerySet):
 class FailedLoginManager(models.Manager):
     def create(self, username: str, request: HttpRequest, **kwargs: Any) -> Any:
         """Create a FailedLogin object."""
-        kwargs["user_agent"] = _parse_user_agent(request)
-        kwargs["ip_address"] = _parse_ip_address(request)
+        kwargs["user_agent"] = _parse_user_agent(request)[:39]
+        kwargs["ip_address"] = _parse_ip_address(request)[:255]
         return super().create(username=username, **kwargs)
 
 
@@ -69,4 +66,4 @@ class FailedLogin(models.Model):
     objects = FailedLoginManager.from_queryset(FailedLoginQuerySet)()
 
     def __str__(self) -> str:
-        return f"FailedLogin for {self.username}"
+        return f"FailedLogin for '{self.username}'"

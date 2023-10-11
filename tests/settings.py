@@ -71,3 +71,10 @@ ROOT_URLCONF = "tests.urls"
 
 if not DEBUG:
     raise Exception("This settings file can only be used with DEBUG=True")
+
+# === account_locker settings ===
+
+# 3 in 10s, lockout for 10s
+FAILED_LOGIN_INTERVAL_SECS = 10
+MAX_FAILED_LOGIN_ATTEMPTS = 3
+ACCOUNT_LOCKED_TIMEOUT_SECS = 10
