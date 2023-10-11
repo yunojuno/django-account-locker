@@ -7,7 +7,7 @@ from django.http import HttpRequest
 
 from .exceptions import AccountLocked
 from .models import FailedLogin
-from .settings import ACCOUNT_LOCKED_TIMEOUT_SECS
+from .settings import ACCOUNT_LOCKED_TIMEOUT_SECS, MAX_FAILED_LOGIN_ATTEMPTS
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +16,10 @@ def _cache_key(username: str) -> str:
     return f"users:account_lockout:{username}"
 
 
-def lock_account(username: str) -> None:
+def lock_account(username: str, seconds: int = ACCOUNT_LOCKED_TIMEOUT_SECS) -> None:
     """Mark an account as locked for a short period."""
     logger.debug("Locking account '%s'", username)
-    cache.set(_cache_key(username), True, ACCOUNT_LOCKED_TIMEOUT_SECS)
+    cache.set(_cache_key(username), True, seconds)
 
 
 def unlock_account(username: str) -> None:
@@ -62,7 +62,10 @@ def handle_failed_login(username: str, request: HttpRequest) -> bool:
     """
     logger.debug("Adding failed login for '%s'", username)
     FailedLogin.objects.create(username=username, request=request)
-    if FailedLogin.objects.gte_max_limit(username):
+    if (
+        FailedLogin.objects.filter(username=username).gte_cutoff().count()
+        >= MAX_FAILED_LOGIN_ATTEMPTS
+    ):
         lock_account(username)
         return True
     return False

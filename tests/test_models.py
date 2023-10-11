@@ -5,38 +5,22 @@ from django.test import RequestFactory
 from django.utils import timezone
 
 from account_locker.models import FailedLogin, _parse_ip_address
+from account_locker.settings import FAILED_LOGIN_INTERVAL_SECS
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "count,interval,result",
-    [
-        (1, 1, False),
-        # 3 logins at 1s intervals = 0, 1, 2 - total interval = 2s
-        (3, 1, True),
-        # 3 logins at 14s intervals = 0, 14, 28 - trips lockout
-        (3, 14, True),
-        # 3 logins at 15s intervals = 0, 15, 30 + few ms - no lockout
-        (3, 15, False),
-    ],
-)
-def test_gte_max_limit(count: int, interval: int, result: bool) -> None:
+def test_gte_cutoff() -> None:
     username = "username"
-    max_limit = 3
-    max_interval = 30
     now = timezone.now()
-    # create a series of FailedLogins starting now and going
-    # back in time, with `interval` between each.
-    for i in range(count):
-        timestamp = now - datetime.timedelta(seconds=i * interval)
-        FailedLogin.objects.create("username", None, timestamp=timestamp)
-    assert FailedLogin.objects.count() == count
-    assert (
-        FailedLogin.objects.gte_max_limit(
-            username, limit=max_limit, interval=max_interval
-        )
-        == result
-    )
+    qs = FailedLogin.objects.filter(username=username)
+    fl1 = FailedLogin.objects.create("username", None)
+    assert qs.count() == 1
+    # create a FailedLogin outside the cutoff window
+    timestamp = now - datetime.timedelta(seconds=FAILED_LOGIN_INTERVAL_SECS)
+    _ = FailedLogin.objects.create("username", None, timestamp=timestamp)
+    assert qs.count() == 2
+    assert qs.gte_cutoff().count() == 1
+    assert qs.gte_cutoff().get() == fl1
 
 
 @pytest.mark.parametrize(

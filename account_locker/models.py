@@ -9,7 +9,6 @@ from django.utils.timezone import now as tz_now
 
 from .settings import (
     FAILED_LOGIN_INTERVAL_SECS,
-    MAX_FAILED_LOGIN_ATTEMPTS,
 )
 
 
@@ -31,20 +30,13 @@ def _parse_user_agent(request: HttpRequest) -> str:
 
 
 class FailedLoginQuerySet(models.QuerySet):
-    def gte_max_limit(
+    def gte_cutoff(
         self,
-        username: str,
-        limit: int = MAX_FAILED_LOGIN_ATTEMPTS,
-        interval: int = FAILED_LOGIN_INTERVAL_SECS,
+        seconds: int = FAILED_LOGIN_INTERVAL_SECS,
     ) -> bool:
-        """Return True if the number of failed logins exceeds stated limits."""
-        cutoff = tz_now() - datetime.timedelta(seconds=interval)
-        return (
-            self.order_by("-timestamp")
-            .filter(username=username, timestamp__gte=cutoff)
-            .count()
-            >= limit
-        )
+        """Filter queryset to the cutoff window."""
+        cutoff = tz_now() - datetime.timedelta(seconds=seconds)
+        return self.order_by("-timestamp").filter(timestamp__gte=cutoff)
 
 
 class FailedLoginManager(models.Manager):
