@@ -33,9 +33,9 @@ This packages satisfies two requirements:
 ### Failure logging
 
 This package includes a model called `FailedLogin` which records the
-username and request info (IP address, user agent). 
+username and request info (IP address, user agent).
 
-NB This locking mechanism operates at the username level, and **not** 
+NB This locking mechanism operates at the username level, and **not**
 a the `User` account level. This is to prevent another attack, Account
 Enumeration, whereby an attacker can determine which accounts are real.
 
@@ -76,7 +76,7 @@ the limit set by `MAX_FAILED_LOGIN_ATTEMPTS`. Defaults to 60.
 
 The actual login class is left out of the core package, and is up to you
 to implement. The `demo` app provided in the source distribution does
-include an authentication backend called `CustomAuthBackend` which 
+include an authentication backend called `CustomAuthBackend` which
 demonstrates a very simple implementation.
 
 ```python
@@ -142,4 +142,15 @@ class CustomAuthBackend(ModelBackend):
         # have we now tripped the AccountLocked exception?
         lockout.raise_if_locked(username)
 
+```
+
+All of this is wrapped up in a decorator called `apply_account_lock`,
+which wraps the `ModelBackend.authenticate` method. The simplest
+possible implementation is therefore:
+
+```python
+class CustomModelBackend(ModelBackend):
+    @apply_account_lock
+    def authenticate(self, request, **credentials) -> User | None:
+        super().authenticate(self, **credentials):
 ```
