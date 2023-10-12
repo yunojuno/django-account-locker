@@ -14,6 +14,7 @@ def test_gte_cutoff() -> None:
     now = timezone.now()
     qs = FailedLogin.objects.filter(username=username)
     fl1 = FailedLogin.objects.create("username", None)
+    assert str(fl1) == "Failed login for 'username'"
     assert qs.count() == 1
     # create a FailedLogin outside the cutoff window
     timestamp = now - datetime.timedelta(seconds=FAILED_LOGIN_INTERVAL_SECS)

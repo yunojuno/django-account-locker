@@ -76,7 +76,9 @@ if not DEBUG:
 # === demo settings ===
 
 AUTHENTICATION_BACKENDS = [
-    "demo.auth_backends.CustomAuthBackend",
+    # login as user "user2" to fall-through to CustomAuthBackend2
+    "demo.auth_backends.CustomAuthBackend1",
+    "demo.auth_backends.CustomAuthBackend2",
 ]
 
 #  === account_locker settings ===

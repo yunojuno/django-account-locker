@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -43,11 +42,7 @@ def is_account_locked(username: str) -> bool:
     return False
 
 
-def raise_if_locked(
-    username: str,
-    exception_type: type[Exception] = AccountLocked,
-    **exception_kwargs: Any,
-) -> None:
+def raise_if_locked(username: str) -> None:
     """
     Raise error if account is locked.
 
@@ -56,7 +51,7 @@ def raise_if_locked(
 
     """
     if is_account_locked(username):
-        raise exception_type(**exception_kwargs)
+        raise AccountLocked
 
 
 def handle_failed_login(username: str, request: HttpRequest) -> bool:

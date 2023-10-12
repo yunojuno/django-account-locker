@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class CustomAuthBackendx(ModelBackend):
+class CustomAuthBackend1(ModelBackend):
     def authenticate(
         self,
         request: HttpRequest,
@@ -24,6 +24,10 @@ class CustomAuthBackendx(ModelBackend):
         **kwargs: Any,
     ) -> settings.AUTH_USER_MODEL | None:
         if not username:
+            return None
+
+        if username == "user2":
+            logger.info("Falling through CustomBackend1")
             return None
 
         if lockout.is_account_locked(username):
@@ -44,8 +48,8 @@ class CustomAuthBackendx(ModelBackend):
         return None
 
 
-class CustomAuthBackend(ModelBackend):
-    @decorators.apply_account_lockout()
+class CustomAuthBackend2(ModelBackend):
+    @decorators.apply_account_lockout
     def authenticate(
         self,
         request: HttpRequest,

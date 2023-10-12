@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable
 
 from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
@@ -8,13 +8,8 @@ from django.http import HttpRequest
 
 from .lockout import handle_failed_login, raise_if_locked
 
-AuthenticateMethodSignature: TypeAlias = Callable[
-    [ModelBackend, HttpRequest, str | None, str | None, Any],
-    settings.AUTH_USER_MODEL | None,
-]
 
-
-def apply_account_lockout() -> Callable:
+def apply_account_lockout(func: Callable) -> Callable:
     """
     Decorate ModelBackend.authenticate() to throttle login attempts.
 
@@ -34,23 +29,20 @@ def apply_account_lockout() -> Callable:
 
     """
 
-    def decorator(func: AuthenticateMethodSignature) -> AuthenticateMethodSignature:
-        def wrapper(
-            instance: ModelBackend,
-            request: HttpRequest,
-            username: str | None = None,
-            password: str | None = None,
-            **kwargs: Any,
-        ) -> settings.AUTH_USER_MODEL | None:
-            if not username or not password:
-                return None
+    def wrapper(
+        instance: ModelBackend,
+        request: HttpRequest,
+        username: str | None = None,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> settings.AUTH_USER_MODEL | None:
+        if not username or not password:
+            return None
+        raise_if_locked(username)
+        result = func(instance, request, username, password, **kwargs)
+        if result is None:
+            handle_failed_login(username, request)
             raise_if_locked(username)
-            result = func(instance, request, username, password, **kwargs)  # type: ignore
-            if result is None:
-                handle_failed_login(username, request)
-                raise_if_locked(username)
-            return result
+        return result
 
-        return wrapper  # type: ignore
-
-    return decorator
+    return wrapper

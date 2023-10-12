@@ -58,4 +58,4 @@ class FailedLogin(models.Model):
     objects = FailedLoginManager.from_queryset(FailedLoginQuerySet)()
 
     def __str__(self) -> str:
-        return f"FailedLogin for '{self.username}'"
+        return f"Failed login for '{self.username}'"
