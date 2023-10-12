@@ -9,13 +9,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.http import HttpRequest
 
-from account_locker import lockout
+from account_locker import decorators, lockout
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class CustomAuthBackend(ModelBackend):
+class CustomAuthBackendx(ModelBackend):
     def authenticate(
         self,
         request: HttpRequest,
@@ -42,3 +42,15 @@ class CustomAuthBackend(ModelBackend):
         if lockout.handle_failed_login(username, request):
             messages.error(request, "Your account has been locked.")
         return None
+
+
+class CustomAuthBackend(ModelBackend):
+    @decorators.apply_account_lockout()
+    def authenticate(
+        self,
+        request: HttpRequest,
+        username: str | None = None,
+        password: str | None = None,
+        **kwargs: Any,
+    ) -> settings.AUTH_USER_MODEL | None:
+        return super().authenticate(request, username, password, **kwargs)
