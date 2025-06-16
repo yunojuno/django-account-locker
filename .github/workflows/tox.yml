@@ -37,12 +37,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11"]
-        django: ["32", "40", "41", "42", "main"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        django: ["42", "50", "52", "main"]
         exclude:
+          - python: "3.8"
+            django: "50"
+          - python: "3.8"
+            django: "52"
           - python: "3.8"
             django: "main"
           - python: "3.9"
+            django: "50"
+          - python: "3.9"
+            django: "52"
+          - python: "3.9"
+            django: "main"
+          - python: "3.10"
+            django: "main"
+          - python: "3.11"
             django: "main"
 
     env:
